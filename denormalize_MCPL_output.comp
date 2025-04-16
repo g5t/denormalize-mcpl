@@ -65,6 +65,24 @@ int mcpl_file_exist (char *filename)
     struct stat   buffer;
     return (stat (filename, &buffer) == 0);
   }
+
+void add_signed64bit_integer(mcpl_outfile_t outfile, const char *key, int64_t value) {
+    uint8_t serialized[8]; // Array to hold the serialized integer
+
+    // Convert the integer to big-endian format (network byte order)
+    serialized[0] = (value >> 56) & 0xFF;
+    serialized[1] = (value >> 48) & 0xFF;
+    serialized[2] = (value >> 40) & 0xFF;
+    serialized[3] = (value >> 32) & 0xFF;
+    serialized[4] = (value >> 24) & 0xFF;
+    serialized[5] = (value >> 16) & 0xFF;
+    serialized[6] = (value >> 8) & 0xFF;
+    serialized[7] = value & 0xFF;
+
+    // Use the mcpl_hdr_add_data function to add the binary blob
+    mcpl_hdr_add_data(outfile, key, 8, (const char *)serialized);
+}
+
 %}
 
 DECLARE
@@ -169,6 +187,8 @@ sprintf(tmpstr, "");
     }
     *(clrp)='\0';
     mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);
+
+    add_signed_64bit_integer(outputfile, "mccode_neutron_count", mcneutron_count());
 
     if (polarisationuse) {
         mcpl_enable_polarisation(outputfile);

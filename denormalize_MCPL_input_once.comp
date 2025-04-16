@@ -54,11 +54,34 @@ SHARE
 #define sleep Sleep
 #endif
 
+int64_t deserialize_signed_64bit_integer(const uint8_t *data) {
+    return ((int64_t)data[0] << 56) |
+           ((int64_t)data[1] << 48) |
+           ((int64_t)data[2] << 40) |
+           ((int64_t)data[3] << 32) |
+           ((int64_t)data[4] << 24) |
+           ((int64_t)data[5] << 16) |
+           ((int64_t)data[6] << 8) |
+           ((int64_t)data[7]);
+}
+
+int64_t get_mcpl_mccode_neutron_count(mcpl_file_t filename){
+  int ret;
+  uint32_t ldata;
+  const char * data;
+  ret = mcpl_hdf_blob(filename, "mccode_neutron_count", &ldata, &data);
+  if (res && ldata == 8) {
+    return deserialize_signed_64bit_integer(data);
+  }
+  return 1;
+}
+
 %}
 
 DECLARE
 %{
 mcpl_file_t inputfile;
+int64_t mcpl_mccode_neutron_count;
 long long nparticles;
 long long read_neutrons;
 long long used_neutrons;
@@ -105,6 +128,8 @@ INITIALIZE
         printf("Message(%s): MCPL file (%s) contains %lu particles.\n",NAME_CURRENT_COMP,filename,(long unsigned)nparticles); 
     }
     mcset_ncount(nparticles);
+
+    mcpl_mccode_neutron_count = get_mcpl_mccode_neutron_count(inputfile);
 
     if(repeat_count>1 && v_smear==0 && pos_smear==0 && dir_smear==0) {
       fprintf(stdout, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
@@ -208,7 +233,7 @@ INITIALIZE
 	      /*time in ms:*/
 	      T[used_neutrons] = particle->time;
 	      /*weight in unspecified units:*/
-	      P[used_neutrons] = particle->weight / nparticles;
+	      P[used_neutrons] = particle->weight / mcpl_mccode_neutron_count;
 	      E[used_neutrons] = particle->ekin;
 	      used_neutrons++;
 	    }
@@ -366,7 +391,7 @@ TRACE
     /*time in ms:*/
     t=particle->time*1e-3;
     /*weight in unspecified units:*/
-    p=particle->weight / ncount;
+    p=particle->weight / mcpl_mccode_neutron_count;
     #endif
   } else {
     t=T[i]*1e-3;
