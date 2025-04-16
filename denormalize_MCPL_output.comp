@@ -233,6 +233,8 @@ TRACE
 %{
   double uvar;
   int fail;
+  double scale;
+  scale = 1.0 * mcget_ncount();
 #ifdef OPENACC
   int cap;
   #pragma acc atomic capture
@@ -252,7 +254,7 @@ TRACE
     SY[cap]=sy;
     SZ[cap]=sz;
     T[cap]=t;
-    P[cap]=p;
+    P[cap]=p * scale;
     if(userflagenabled) {
       uvar = particle_getvar(_particle,userflag,&fail); if(fail) uvar=0;
       U[cap] = uvar;
@@ -282,7 +284,7 @@ TRACE
     /*time in ms:*/
     particle->time = t*1e3;
     /*weight in unspecified units:*/
-    particle->weight = p;
+    particle->weight = p * scale;
     /*if specified also add the userflags*/
     if(userflagenabled){
         uvar = particle_getvar(_particle,userflag,&fail); if(fail) uvar=0;

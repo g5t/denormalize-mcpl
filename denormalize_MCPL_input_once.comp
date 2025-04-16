@@ -208,7 +208,7 @@ INITIALIZE
 	      /*time in ms:*/
 	      T[used_neutrons] = particle->time;
 	      /*weight in unspecified units:*/
-	      P[used_neutrons] = particle->weight;
+	      P[used_neutrons] = particle->weight / nparticles;
 	      E[used_neutrons] = particle->ekin;
 	      used_neutrons++;
 	    }
@@ -366,7 +366,7 @@ TRACE
     /*time in ms:*/
     t=particle->time*1e-3;
     /*weight in unspecified units:*/
-    p=particle->weight;
+    p=particle->weight / ncount;
     #endif
   } else {
     t=T[i]*1e-3;
